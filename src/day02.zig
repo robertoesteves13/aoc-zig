@@ -34,57 +34,50 @@ pub fn main() !void {
     var valid_reports: u64 = 0;
     for (0..number_matrix.items.len) |u| {
         const list = number_matrix.items[u];
-        var distances = List(i32).init(gpa);
-        var sum: i32 = 0;
-        for (1..list.items.len) |i| {
-            const num = list.items[i - 1] - list.items[i];
-            try distances.append(num);
-            sum += num;
-        }
-
-        if (sum < 0) {
-            for (0..distances.items.len) |i| {
-                distances.items[i] *= -1;
-            }
-            sum *= -1;
-        }
-
-        var errors = List(usize).init(gpa);
-        for (0..distances.items.len) |i| {
-            if (distances.items[i] > 3 or distances.items[i] <= 0) try errors.append(i);
-        }
-
-        if (errors.items.len == 0) {
+        if (try is_solvable(list) == true) {
             valid_reports += 1;
         } else {
-            if (errors.items.len == 1) {
-                const idx = errors.items[0];
-                const distance = distances.items[idx];
-
-                if (distance > 0) {
-                    if (idx == 0 or idx == distances.items.len - 1) valid_reports += 1;
-                } else {
-                    if (distance == 0) valid_reports += 1 else {
-                        if (idx == 0 or idx == distances.items.len - 1) valid_reports += 1 else {
-                            const val = distance + distances.items[idx + 1];
-                            if (val <= 3 or val > 0) valid_reports += 1;
-                        }
+            for (0..list.items.len) |i| {
+                var new_list = List(i32).init(gpa);
+                for (0..list.items.len) |j| {
+                    if (i != j) {
+                        try new_list.append(list.items[j]);
                     }
                 }
-            }
-            if (errors.items.len == 2) {
-                const idx_mean = errors.items[1] - errors.items[0];
-                if (idx_mean == 1) {
-                    const val = distances.items[errors.items[1]] + distances.items[errors.items[0]];
-                    if (val <= 3 and val > 0) {
-                        valid_reports += 1;
-                    }
+
+                if (try is_solvable(new_list) == true) {
+                    valid_reports += 1;
+                    break;
                 }
             }
         }
     }
 
     print("Valid Reports: {}\n", .{valid_reports});
+}
+
+fn is_solvable(list: List(i32)) !bool {
+    var distances = List(i32).init(gpa);
+    var sum: i32 = 0;
+    for (1..list.items.len) |i| {
+        const num = list.items[i - 1] - list.items[i];
+        try distances.append(num);
+        sum += num;
+    }
+
+    if (sum < 0) {
+        for (0..distances.items.len) |i| {
+            distances.items[i] *= -1;
+        }
+        sum *= -1;
+    }
+
+    var errors = List(usize).init(gpa);
+    for (0..distances.items.len) |i| {
+        if (distances.items[i] > 3 or distances.items[i] <= 0) try errors.append(i);
+    }
+
+    return errors.items.len == 0;
 }
 
 // Useful stdlib functions
