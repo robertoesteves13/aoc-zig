@@ -55,6 +55,42 @@ const Parser = struct {
         }
     }
 
+    fn parse_part_2(self: *Self) void {
+        // Get the dimensions of the input
+        const rows = self.input.len;
+        const cols = if (rows > 0) self.input[0].len else 0;
+
+        // Window size
+        const window_size = 3;
+
+        // Make sure we don't go out of bounds
+        const max_row = if (rows >= window_size) rows - window_size + 1 else 0;
+        const max_col = if (cols >= window_size) cols - window_size + 1 else 0;
+
+        for (0..max_row) |i| {
+            for (0..max_col) |j| {
+                // Create a temporary array to store the window
+                var window: [window_size][window_size]u8 = undefined;
+
+                // Copy the window contents
+                for (0..window_size) |wi| {
+                    for (0..window_size) |wj| {
+                        window[wi][wj] = self.input[i + wi][j + wj];
+                    }
+                }
+
+                const pattern1 = window[0][0] == 'M' and window[0][2] == 'S' and window[1][1] == 'A' and window[2][0] == 'M' and window[2][2] == 'S';
+                const pattern2 = window[0][0] == 'M' and window[0][2] == 'M' and window[1][1] == 'A' and window[2][0] == 'S' and window[2][2] == 'S';
+                const pattern3 = window[0][0] == 'S' and window[0][2] == 'S' and window[1][1] == 'A' and window[2][0] == 'M' and window[2][2] == 'M';
+                const pattern4 = window[0][0] == 'S' and window[0][2] == 'M' and window[1][1] == 'A' and window[2][0] == 'S' and window[2][2] == 'M';
+
+                if (pattern1 or pattern2 or pattern3 or pattern4) {
+                    self.count += 1;
+                }
+            }
+        }
+    }
+
     fn parse(self: *Self) void {
         // Get the dimensions of the input
         const rows = self.input.len;
@@ -123,6 +159,10 @@ pub fn main() !void {
     var parser = Parser.init(lines.items, gpa);
     parser.parse();
 
+    print("Total: {}\n", .{parser.count});
+
+    parser.count = 0;
+    parser.parse_part_2();
     print("Total: {}\n", .{parser.count});
 }
 
